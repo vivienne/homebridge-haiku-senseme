@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "BigAssFans SenseME",
-  "name": "homebridge-bigassfans-senseme",
+  "displayName": "Haiku",
+  "name": "homebridge-haiku-senseme",
   "version": "1.0.0",
-  "description": "A homebridge plugin for Big Ass Fans SenseME devices.",
+  "description": "A homebridge plugin for Haiku SenseME devices.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/vivienne/homebridge-bigassfans-senseme.git"
+    "url": "git://github.com/vivienne/homebridge-haiku-senseme.git"
   },
   "bugs": {
-    "url": "https://github.com/vivienne/homebridge-bigassfans-senseme/issues"
+    "url": "https://github.com/vivienne/homebridge-haiku-senseme/issues"
   },
   "engines": {
     "node": ">=10.17.0",
