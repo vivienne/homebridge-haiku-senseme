@@ -1,6 +1,7 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
 
 import { HomebridgeHaikuPlatform } from './platform';
+import { Device, SenseME } from '@nightbird/haiku-senseme';
 
 /**
  * Platform Accessory
@@ -36,7 +37,7 @@ export class HaikuPlatformAccessory {
 
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
-    // this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
+    //this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
@@ -60,7 +61,7 @@ export class HaikuPlatformAccessory {
     //
     // Here we change update the brightness to a random value every 5 seconds using 
     // the `updateCharacteristic` method.
-    setInterval(() => {
+    /*setInterval(() => {
       // assign the current brightness a random value between 0 and 100
       const currentBrightness = Math.floor(Math.random() * 100);
 
@@ -68,7 +69,7 @@ export class HaikuPlatformAccessory {
       this.service.updateCharacteristic(this.platform.Characteristic.Brightness, currentBrightness);
 
       this.platform.log.debug('Pushed updated current Brightness state to HomeKit:', currentBrightness);
-    }, 10000);
+    }, 10000);*/
   }
 
   /**

@@ -53,8 +53,23 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
   discoverDevices() {
 
     SenseME.setConfig({ broadcastAddress: undefined })
-      .on('founddevice', dev => {
-        this.log.info(`Found a device: ${dev.name} (${dev.ip})`);
+      .on('founddevice', device => {
+        this.log.info(`Found a device: ${device.name} (${device.id})`);
+        const uuid = this.api.hap.uuid.generate(device.id);
+        const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+        if (existingAccessory) {
+          this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+          this.api.updatePlatformAccessories([existingAccessory]);
+          new HaikuPlatformAccessory(this, existingAccessory);
+        } else {
+          this.log.info('Adding new accessory:', device.name);
+          const accessory = new this.api.platformAccessory(device.name, uuid);
+          accessory.context.device = device;
+          this.log.debug(device);
+          new HaikuPlatformAccessory(this, accessory);
+          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        }
       })
       .on('lostdevice', dev => {
         this.log.info(`Lost a device: ${dev.name} (${dev.ip})`);
@@ -64,17 +79,24 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
     // run discovery for 30 seconds
     setTimeout(() => {
       SenseME.cancelDiscovery();
-      SenseME.getAllDevices().forEach(dev => dev.disconnect());
+      //SenseME.getAllDevices().forEach(dev => dev.disconnect());
     }, 3000);
+          
 
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services
     // or a user-defined array in the platform config.
-    const exampleDevices = [
+    /*const exampleDevices = [
       {
         ip: '10.0.1.25',
-        id: '20:F8:5E:E2:4C:98',
+        id: '20:F8:5E:E2:4C:90',
         name: 'Master Bedroom Light',
+        type: 'LIGHT,HAIKU',
+      },
+      {
+        ip: '10.0.1.16',
+        id: '20:F8:5E:E2:4D:80',
+        name: 'Entryway Light',
         type: 'LIGHT,HAIKU',
       },
     ];
@@ -124,7 +146,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
 
       // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
       // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    }
+    }*/
 
   }
 }
