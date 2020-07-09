@@ -15,10 +15,10 @@ export class HaikuPlatformAccessory {
    * These are just used to create a working example
    * You should implement your own code to track the state of your accessory
    */
-  private exampleStates = {
+  /*private exampleStates = {
     On: false,
     Brightness: 100,
-  }
+  }*/
 
   constructor(
     private readonly platform: HomebridgeHaikuPlatform,
@@ -28,7 +28,8 @@ export class HaikuPlatformAccessory {
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Big Ass Fans')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
+      .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.type)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'Default-FW')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
@@ -41,7 +42,7 @@ export class HaikuPlatformAccessory {
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
+    this.service.setCharacteristic(this.platform.Characteristic.Name, this.accessory.context.device.name);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
@@ -79,7 +80,8 @@ export class HaikuPlatformAccessory {
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
     // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
+    //this.exampleStates.On = value as boolean;
+    this.accessory.context.device.light.power.value = 'on';
 
     this.platform.log.debug('Set Characteristic On ->', value);
 
@@ -103,7 +105,8 @@ export class HaikuPlatformAccessory {
   getOn(callback: CharacteristicGetCallback) {
 
     // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
+    //const isOn = this.exampleStates.On;
+    const isOn = this.accessory.context.device.light.power.value as boolean;
 
     this.platform.log.debug('Get Characteristic On ->', isOn);
 
@@ -120,7 +123,8 @@ export class HaikuPlatformAccessory {
   setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
     // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
+    //this.exampleStates.Brightness = value as number;
+    this.accessory.context.device.light.brightness.value = value;
 
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
 

@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'haiku';
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = '@vivienne/homebridge-haiku-senseme';
+export const PLUGIN_NAME = 'homebridge-haiku-senseme';
