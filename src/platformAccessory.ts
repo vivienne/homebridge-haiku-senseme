@@ -10,6 +10,7 @@ import { Device, SenseME } from '@nightbird/haiku-senseme';
  */
 export class HaikuPlatformAccessory {
   private service: Service;
+  private device: Device;
 
   /**
    * These are just used to create a working example
@@ -20,6 +21,12 @@ export class HaikuPlatformAccessory {
     private readonly platform: HomebridgeHaikuPlatform,
     private readonly accessory: PlatformAccessory,
   ) {
+    this.device = new Device({
+      name: this.accessory.context.device.name, 
+      id: this.accessory.context.device.id, 
+      type: this.accessory.context.device.type, 
+      ip: this.accessory.context.device.ip});
+    this.device.refreshAll();
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
@@ -50,31 +57,9 @@ export class HaikuPlatformAccessory {
       .on('get', this.getOn.bind(this));               // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic
-    //this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-    //  .on('set', this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
-
-    // EXAMPLE ONLY
-    // Example showing how to update the state of a Characteristic asynchronously instead
-    // of using the `on('get')` handlers.
-    //
-    // Here we change update the brightness to a random value every 5 seconds using 
-    // the `updateCharacteristic` method.
-    /* setInterval(() => {
-      // assign the current brightness a random value between 0 and 100
-      this.device.light.power.refresh();
-      this.device.light.power.listen()
-        .on('change', power => {
-          this.platform.log.debug(`Current power: ${power}`);
-          if(power === 'on') {
-            this.service.updateCharacteristic(this.platform.Characteristic.On, true); 
-          }
-          if(power === 'off') {
-            this.service.updateCharacteristic(this.platform.Characteristic.On, false); 
-          }
-        });
-      // push the new value to HomeKit
-      this.platform.log.debug('Pushed updated current On state to HomeKit:', this.device.light.power.value);
-    }, 10000);*/
+    this.service.getCharacteristic(this.platform.Characteristic.Brightness)
+      .on('set', this.setBrightness.bind(this))        // SET - bind to the 'setBrightness` method below
+      .on('get', this.getBrightness.bind(this));       
   }
 
   /**
@@ -82,21 +67,14 @@ export class HaikuPlatformAccessory {
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-
-    // implement your own code to turn your device on/off
-    //this.exampleStates.On = value as boolean;
-    const device = SenseME.getDeviceById(this.accessory.context.id);
-    const currentOn = device.light.power.value; 
-    this.platform.log.debug('test setOn');
-    if(currentOn === 'on') {
-      device.light.power.value = 'on';
-    } else {
-      device.light.power.value = 'off';
-    }
-
     this.platform.log.debug('Set Characteristic On ->', value);
-
-    // you must call the callback function
+    if(value) {
+      this.device.light.power.value = 'on';
+      this.service.updateCharacteristic(this.platform.Characteristic.On, true);
+    } else {
+      this.device.light.power.value = 'off';
+      this.service.updateCharacteristic(this.platform.Characteristic.On, false);
+    }
     callback(null);
   }
 
@@ -114,32 +92,51 @@ export class HaikuPlatformAccessory {
    * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
    */
   getOn(callback: CharacteristicGetCallback) {
-    const value = true;
-    const device = SenseME.getDeviceById(this.accessory.context.id);
-
-    // implement your own code to check if the device is on
-    device.light.power.refresh();
-    device.light.power.listen()
-      .on('change', power => this.platform.log.debug(`Current power: ${power}`));
-    // you must call the callback function
-    // the first argument should be null if there were no errors
-    // the second argument should be the value to return
-    callback(null, value);
+    let currentOn = this.service.getCharacteristic(this.platform.Characteristic.On).value as boolean;
+    this.device.light.power.refresh();
+    this.device.light.power.listen()
+      .on('change', power => {
+        this.platform.log.debug(`Current power: ${power}`);
+        if(power === 'ON') {
+          currentOn = true;
+        }
+        if(power === 'OFF') {
+          currentOn = false;
+        }
+      });
+    callback(null, currentOn);
   }
 
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
    */
-  /* setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-
-    // implement your own code to set the brightness
-    this.device.light.brightness.value = value as number;
-
+  setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    this.platform.log.debug('maximum from API', this.device.light.brightness.maximum.value);
+    const maxVal = this.device.light.brightness.maximum.value || 16;
+    const apiValue = Math.round(value as number/100*maxVal);
+    this.platform.log.debug('Set Characteristic Brightness (apiValue) -> ', apiValue);
+    this.device.light.brightness.value = apiValue;
 
-    // you must call the callback function
     callback(null);
-  }*/
+  }
+  
+  /**
+   * Handle "GET" requests from HomeKit 
+   * These are sent when HomeKit wants to know the current state of the accessory
+   */
+  getBrightness(callback: CharacteristicGetCallback) {
+    const maxVal = this.device.light.brightness.maximum.value || 16;
+    let currentBrightness = this.service.getCharacteristic(this.platform.Characteristic.Brightness).value as number;
+    this.device.light.brightness.refresh();
+    this.device.light.brightness.listen()
+      .on('change', brightness => {
+        currentBrightness = brightness/maxVal*100;
+        this.platform.log.debug(`API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
+      });
+
+    callback(null, currentBrightness);
+  }
 
 }

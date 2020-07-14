@@ -2,7 +2,7 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { HaikuPlatformAccessory } from './platformAccessory';
-import { Device, SenseME } from '@nightbird/haiku-senseme';
+//import { Device, SenseME } from '@nightbird/haiku-senseme';
 
 /**
  * HomebridgeHaikuPlatform
@@ -52,20 +52,15 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    */
   discoverDevices() {
     
-    const device = new Device({ name: 'Master Bedroom Light', id: '20:F8:5E:E2:4C:98', type: 'HAIKU,LIGHT', ip: '10.0.1.25' });
-
-    const deviceData = {
-      name: device.name,
-      type: device.type,
-      id: device.id,
+    // TODO - change this out to SenseME discovery call
+    const device = {
+      name: 'Master Bedroom Light',
+      type: 'HAIKU,LIGHT',
+      id: '20:F8:5E:E2:4C:98',
+      ip: '10.0.1.25',
     };
 
-    this.log.debug('dumping:', deviceData);
-
-    this.log.debug(`dev id: ${device.id}`);
     const uuid = this.api.hap.uuid.generate(device.id as string);
-    this.log.debug(`uuid: ${uuid}`);
-
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
     if (existingAccessory) {
@@ -74,7 +69,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
 
       // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
       this.log.debug(`accessory info - name: ${existingAccessory.displayName} uuid: ${existingAccessory.UUID}`);
-      existingAccessory.context.device = deviceData;
+      existingAccessory.context.device = device;
       try {
         this.api.updatePlatformAccessories([existingAccessory]);
       } catch (e) {
@@ -88,7 +83,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
     } else {
       const accessory = new this.api.platformAccessory(device.name, uuid, this.api.hap.Categories.LIGHTBULB);
       this.log.debug(`accessory info - name: ${accessory.displayName} uuid: ${accessory.UUID}`);
-      accessory.context.device = deviceData;
+      accessory.context.device = device;
       new HaikuPlatformAccessory(this, accessory);
       try {
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
@@ -133,72 +128,10 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
       SenseME.getAllDevices().forEach(dev => dev.disconnect());
       //return SenseME.getAllDevices();
     }, 30000);*/
-  
+    
 
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    /*const exampleDevices = [
-      {
-        ip: '10.0.1.25',
-        id: '20:F8:5E:E2:4C:90',
-        name: 'Master Bedroom Light',
-        type: 'LIGHT,HAIKU',
-      },
-      {
-        ip: '10.0.1.16',
-        id: '20:F8:5E:E2:4D:80',
-        name: 'Entryway Light',
-        type: 'LIGHT,HAIKU',
-      },
-    ];
-
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
-
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.id);
-
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-
-      if (existingAccessory) {
-        // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
-
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new HaikuPlatformAccessory(this, existingAccessory);
-
-      } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.name);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.name, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
-
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new HaikuPlatformAccessory(this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      }
-
-      // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-      // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    }*/
+    // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+    // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
 
   }
 }
