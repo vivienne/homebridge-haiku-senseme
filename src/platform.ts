@@ -12,7 +12,6 @@ import { Device, SenseME } from '@nightbird/haiku-senseme';
 export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
-
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
 
@@ -28,7 +27,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
-      log.debug('Executed didFinishLaunching callback');
+      this.log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
       this.discoverDevices();
     });
@@ -39,9 +38,10 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory) {
-    this.log.info('Loading accessory from cache:', accessory.displayName);
+    this.log.info(`Loading accessory from cache: ${accessory.UUID} ${accessory.displayName}`);
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
+    //this.accessories.push(accessory);
     this.accessories.push(accessory);
   }
 
@@ -51,37 +51,89 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
+    
+    const device = new Device({ name: 'Master Bedroom Light', id: '20:F8:5E:E2:4C:98', type: 'HAIKU,LIGHT', ip: '10.0.1.25' });
 
-    SenseME.setConfig({ broadcastAddress: undefined })
-      .on('founddevice', device => {
+    const deviceData = {
+      name: device.name,
+      type: device.type,
+      id: device.id,
+    };
+
+    this.log.debug('dumping:', deviceData);
+
+    this.log.debug(`dev id: ${device.id}`);
+    const uuid = this.api.hap.uuid.generate(device.id as string);
+    this.log.debug(`uuid: ${uuid}`);
+
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+    if (existingAccessory) {
+      // the accessory already exists
+      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+
+      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+      this.log.debug(`accessory info - name: ${existingAccessory.displayName} uuid: ${existingAccessory.UUID}`);
+      existingAccessory.context.device = deviceData;
+      try {
+        this.api.updatePlatformAccessories([existingAccessory]);
+      } catch (e) {
+        this.log.debug(e);
+      }
+
+      // create the accessory handler for the restored accessory
+      // this is imported from `platformAccessory.ts`
+      new HaikuPlatformAccessory(this, existingAccessory);
+
+    } else {
+      const accessory = new this.api.platformAccessory(device.name, uuid, this.api.hap.Categories.LIGHTBULB);
+      this.log.debug(`accessory info - name: ${accessory.displayName} uuid: ${accessory.UUID}`);
+      accessory.context.device = deviceData;
+      new HaikuPlatformAccessory(this, accessory);
+      try {
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      } catch (e) {
+        this.log.debug(e); 
+      }
+    }
+
+    /*SenseME.setConfig({ broadcastAddress: undefined })
+      .on('founddevice', (device: Device) => {
         this.log.info(`Found a device: ${device.name} (${device.id})`);
         const uuid = this.api.hap.uuid.generate(device.id);
+        this.log.info(`assign uuid ${uuid} to ${device.name}`);
         const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
         if (existingAccessory) {
           this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+          existingAccessory.context.name = device.name;
+          existingAccessory.context.type = device.type;
+          existingAccessory.context.id = device.id;
           this.api.updatePlatformAccessories([existingAccessory]);
           new HaikuPlatformAccessory(this, existingAccessory);
         } else {
           this.log.info('Adding new accessory:', device.name);
           const accessory = new this.api.platformAccessory(device.name, uuid);
-          accessory.context.device = device;
-          this.log.debug(device);
+          accessory.context.name = device.name;
+          accessory.context.type = device.type;
+          accessory.context.id = device.id;
+          this.log.debug(`name: ${accessory.displayName} uuid: ${accessory.UUID}`);
           new HaikuPlatformAccessory(this, accessory);
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         }
       })
-      .on('lostdevice', dev => {
-        this.log.info(`Lost a device: ${dev.name} (${dev.ip})`);
+      .on('lostdevice', (device: Device) => {
+        this.log.info(`Lost a device: ${device.name} (${device.ip})`);
       })
       .discover();
 
     // run discovery for 30 seconds
     setTimeout(() => {
       SenseME.cancelDiscovery();
-      //SenseME.getAllDevices().forEach(dev => dev.disconnect());
-    }, 3000);
-          
+      SenseME.getAllDevices().forEach(dev => dev.disconnect());
+      //return SenseME.getAllDevices();
+    }, 30000);*/
+  
 
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services

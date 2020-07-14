@@ -15,10 +15,6 @@ export class HaikuPlatformAccessory {
    * These are just used to create a working example
    * You should implement your own code to track the state of your accessory
    */
-  /*private exampleStates = {
-    On: false,
-    Brightness: 100,
-  }*/
 
   constructor(
     private readonly platform: HomebridgeHaikuPlatform,
@@ -28,13 +24,14 @@ export class HaikuPlatformAccessory {
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Big Ass Fans')
-      .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.type)
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'Default-FW')
+      .setCharacteristic(this.platform.Characteristic.Model, this.accessory.context.device.type)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+    //.setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'Default-FW')
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
+    // eslint-disable-next-line max-len
+    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name);
 
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
@@ -53,8 +50,8 @@ export class HaikuPlatformAccessory {
       .on('get', this.getOn.bind(this));               // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .on('set', this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
+    //this.service.getCharacteristic(this.platform.Characteristic.Brightness)
+    //  .on('set', this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
 
     // EXAMPLE ONLY
     // Example showing how to update the state of a Characteristic asynchronously instead
@@ -62,14 +59,21 @@ export class HaikuPlatformAccessory {
     //
     // Here we change update the brightness to a random value every 5 seconds using 
     // the `updateCharacteristic` method.
-    /*setInterval(() => {
+    /* setInterval(() => {
       // assign the current brightness a random value between 0 and 100
-      const currentBrightness = Math.floor(Math.random() * 100);
-
+      this.device.light.power.refresh();
+      this.device.light.power.listen()
+        .on('change', power => {
+          this.platform.log.debug(`Current power: ${power}`);
+          if(power === 'on') {
+            this.service.updateCharacteristic(this.platform.Characteristic.On, true); 
+          }
+          if(power === 'off') {
+            this.service.updateCharacteristic(this.platform.Characteristic.On, false); 
+          }
+        });
       // push the new value to HomeKit
-      this.service.updateCharacteristic(this.platform.Characteristic.Brightness, currentBrightness);
-
-      this.platform.log.debug('Pushed updated current Brightness state to HomeKit:', currentBrightness);
+      this.platform.log.debug('Pushed updated current On state to HomeKit:', this.device.light.power.value);
     }, 10000);*/
   }
 
@@ -81,7 +85,14 @@ export class HaikuPlatformAccessory {
 
     // implement your own code to turn your device on/off
     //this.exampleStates.On = value as boolean;
-    this.accessory.context.device.light.power.value = 'on';
+    const device = SenseME.getDeviceById(this.accessory.context.id);
+    const currentOn = device.light.power.value; 
+    this.platform.log.debug('test setOn');
+    if(currentOn === 'on') {
+      device.light.power.value = 'on';
+    } else {
+      device.light.power.value = 'off';
+    }
 
     this.platform.log.debug('Set Characteristic On ->', value);
 
@@ -103,33 +114,32 @@ export class HaikuPlatformAccessory {
    * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
    */
   getOn(callback: CharacteristicGetCallback) {
+    const value = true;
+    const device = SenseME.getDeviceById(this.accessory.context.id);
 
     // implement your own code to check if the device is on
-    //const isOn = this.exampleStates.On;
-    const isOn = this.accessory.context.device.light.power.value as boolean;
-
-    this.platform.log.debug('Get Characteristic On ->', isOn);
-
+    device.light.power.refresh();
+    device.light.power.listen()
+      .on('change', power => this.platform.log.debug(`Current power: ${power}`));
     // you must call the callback function
     // the first argument should be null if there were no errors
     // the second argument should be the value to return
-    callback(null, isOn);
+    callback(null, value);
   }
 
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
    */
-  setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+  /* setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
 
     // implement your own code to set the brightness
-    //this.exampleStates.Brightness = value as number;
-    this.accessory.context.device.light.brightness.value = value;
+    this.device.light.brightness.value = value as number;
 
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
 
     // you must call the callback function
     callback(null);
-  }
+  }*/
 
 }
