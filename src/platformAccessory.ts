@@ -3,19 +3,9 @@ import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallb
 import { HomebridgeHaikuPlatform } from './platform';
 import { Device, SenseME } from '@nightbird/haiku-senseme';
 
-/**
- * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
- * Each accessory may expose multiple services of different service types.
- */
 export class HaikuPlatformAccessory {
   private service: Service;
   private device: Device;
-
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
 
   constructor(
     private readonly platform: HomebridgeHaikuPlatform,
@@ -71,8 +61,7 @@ export class HaikuPlatformAccessory {
   }
 
   /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
+   * SET On
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug('Set Characteristic On ->', value);
@@ -87,17 +76,7 @@ export class HaikuPlatformAccessory {
   }
 
   /**
-   * Handle the "GET" requests from HomeKit
-   * These are sent when HomeKit wants to know the current state of the accessory, for example, checking if a Light bulb is on.
-   * 
-   * GET requests should return as fast as possbile. A long delay here will result in
-   * HomeKit being unresponsive and a bad user experience in general.
-   * 
-   * If your device takes time to respond you should update the status of your device
-   * asynchronously instead using the `updateCharacteristic` method instead.
-
-   * @example
-   * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
+   * GET On
    */
   getOn(callback: CharacteristicGetCallback) {
     let currentOn = this.service.getCharacteristic(this.platform.Characteristic.On).value as boolean;
@@ -116,8 +95,7 @@ export class HaikuPlatformAccessory {
   }
 
   /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
+   * SET Brightness
    */
   setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
@@ -131,8 +109,7 @@ export class HaikuPlatformAccessory {
   }
   
   /**
-   * Handle "GET" requests from HomeKit 
-   * These are sent when HomeKit wants to know the current state of the accessory
+   * GET Brightness
    */
   getBrightness(callback: CharacteristicGetCallback) {
     //const maxVal = this.device.light.brightness.maximum.value || 16;
@@ -149,6 +126,9 @@ export class HaikuPlatformAccessory {
     callback(null, currentBrightness);
   }
 
+  /**
+   * SET ColorTemperature
+   */
   setColorTemperature(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug('Set Characteristic ColorTemperature -> ', value);
     const tempValue = value as number;
@@ -161,6 +141,9 @@ export class HaikuPlatformAccessory {
     callback(null);
   }
   
+  /**
+   * GET ColorTemperature
+   */
   getColorTemperature(callback: CharacteristicGetCallback) {
     let currentTemperature = this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature).value as number;
     this.device.light.temperature.refresh();
