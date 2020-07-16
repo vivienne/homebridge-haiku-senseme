@@ -27,7 +27,7 @@
     "homebridge-plugin"
   ],
   "dependencies": {
-    "@nightbird/haiku-senseme": "^3.0.8"
+    "@nightbird/haiku-senseme": "^3.1.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.23",
