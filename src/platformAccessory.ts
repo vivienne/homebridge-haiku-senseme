@@ -26,6 +26,8 @@ export class HaikuPlatformAccessory {
       id: this.accessory.context.device.id, 
       type: this.accessory.context.device.type, 
       ip: this.accessory.context.device.ip});
+
+    // how to make sure this completes?
     this.device.refreshAll();
 
     // set accessory information
@@ -53,13 +55,19 @@ export class HaikuPlatformAccessory {
 
     // register handlers for the On/Off Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.On)
-      .on('set', this.setOn.bind(this))                // SET - bind to the `setOn` method below
-      .on('get', this.getOn.bind(this));               // GET - bind to the `getOn` method below
+      .on('set', this.setOn.bind(this))
+      .on('get', this.getOn.bind(this));
 
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .on('set', this.setBrightness.bind(this))        // SET - bind to the 'setBrightness` method below
+      .on('set', this.setBrightness.bind(this))
       .on('get', this.getBrightness.bind(this));       
+
+    // ColorTemperature - min/max hardcoded because of refresh time
+    this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature)
+      .on('set', this.setColorTemperature.bind(this))
+      .on('get', this.getColorTemperature.bind(this))
+      .setProps({minValue: 200, maxValue: 454});
   }
 
   /**
@@ -115,7 +123,7 @@ export class HaikuPlatformAccessory {
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
     this.platform.log.debug('maximum from API', this.device.light.brightness.maximum.value);
     const maxVal = this.device.light.brightness.maximum.value || 16;
-    const apiValue = Math.round(value as number/100*maxVal);
+    const apiValue = value as number/100*maxVal;
     this.platform.log.debug('Set Characteristic Brightness (apiValue) -> ', apiValue);
     this.device.light.brightness.value = apiValue;
 
@@ -127,7 +135,9 @@ export class HaikuPlatformAccessory {
    * These are sent when HomeKit wants to know the current state of the accessory
    */
   getBrightness(callback: CharacteristicGetCallback) {
-    const maxVal = this.device.light.brightness.maximum.value || 16;
+    //const maxVal = this.device.light.brightness.maximum.value || 16;
+    // hardcoded for now, how to make sure that the values are refreshed?
+    const maxVal = 16;
     let currentBrightness = this.service.getCharacteristic(this.platform.Characteristic.Brightness).value as number;
     this.device.light.brightness.refresh();
     this.device.light.brightness.listen()
@@ -137,6 +147,30 @@ export class HaikuPlatformAccessory {
       });
 
     callback(null, currentBrightness);
+  }
+
+  setColorTemperature(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.platform.log.debug('Set Characteristic ColorTemperature -> ', value);
+    const tempValue = value as number;
+    //this.platform.log.debug('maximum from API', this.device.light.temperature.maximum.value);
+    //const maxVal = this.device.light.temperature.maximum.value || 5000;
+    const apiValue = 1000000/tempValue;
+    this.platform.log.debug('Set Characteristic ColorTemperature (apiValue) -> ', apiValue);
+    this.device.light.temperature.value = apiValue;
+
+    callback(null);
+  }
+  
+  getColorTemperature(callback: CharacteristicGetCallback) {
+    let currentTemperature = this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature).value as number;
+    this.device.light.temperature.refresh();
+    this.device.light.temperature.listen()
+      .on('change', temperature => {
+        currentTemperature = 1000000/temperature;
+        this.platform.log.debug(`API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
+      });
+
+    callback(null, currentTemperature);
   }
 
 }
