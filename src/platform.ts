@@ -2,7 +2,7 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { HaikuPlatformAccessory } from './platformAccessory';
-//import { Device, SenseME } from '@nightbird/haiku-senseme';
+import { Device, SenseME } from '@nightbird/haiku-senseme';
 
 /**
  * HomebridgeHaikuPlatform
@@ -50,10 +50,9 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
-    
+  discoverDevices() {    
     // TODO - change this out to SenseME discovery call
-    const device = {
+    /* const device = {
       name: 'Master Bedroom Light',
       type: 'HAIKU,LIGHT',
       id: '20:F8:5E:E2:4C:98',
@@ -90,10 +89,16 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
       } catch (e) {
         this.log.debug(e); 
       }
-    }
+    }*/
 
-    /*SenseME.setConfig({ broadcastAddress: undefined })
+    SenseME.setConfig({ broadcastAddress: undefined })
       .on('founddevice', (device: Device) => {
+        const deviceInfo = {
+          name: device.name,
+          type: device.type,
+          id: device.id,
+          ip: device.ip,
+        };
         this.log.info(`Found a device: ${device.name} (${device.id})`);
         const uuid = this.api.hap.uuid.generate(device.id);
         this.log.info(`assign uuid ${uuid} to ${device.name}`);
@@ -101,17 +106,13 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
 
         if (existingAccessory) {
           this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-          existingAccessory.context.name = device.name;
-          existingAccessory.context.type = device.type;
-          existingAccessory.context.id = device.id;
+          existingAccessory.context.device = deviceInfo;
           this.api.updatePlatformAccessories([existingAccessory]);
           new HaikuPlatformAccessory(this, existingAccessory);
         } else {
           this.log.info('Adding new accessory:', device.name);
           const accessory = new this.api.platformAccessory(device.name, uuid);
-          accessory.context.name = device.name;
-          accessory.context.type = device.type;
-          accessory.context.id = device.id;
+          accessory.context.device = deviceInfo;
           this.log.debug(`name: ${accessory.displayName} uuid: ${accessory.UUID}`);
           new HaikuPlatformAccessory(this, accessory);
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
@@ -126,8 +127,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
     setTimeout(() => {
       SenseME.cancelDiscovery();
       SenseME.getAllDevices().forEach(dev => dev.disconnect());
-      //return SenseME.getAllDevices();
-    }, 30000);*/
+    }, 30000);
     
 
     // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
