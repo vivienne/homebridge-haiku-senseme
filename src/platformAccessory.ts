@@ -1,7 +1,7 @@
 import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
 
 import { HomebridgeHaikuPlatform } from './platform';
-import { Device, SenseME } from '@nightbird/haiku-senseme';
+import { Device } from '@nightbird/haiku-senseme';
 
 export class HaikuPlatformAccessory {
   private service: Service;
@@ -29,8 +29,8 @@ export class HaikuPlatformAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    // eslint-disable-next-line max-len
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name);
+    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || 
+    this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name);
 
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
@@ -64,13 +64,14 @@ export class HaikuPlatformAccessory {
    * SET On
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.debug('Set Characteristic On ->', value);
+    this.platform.log.debug(`Set Characteristic On (${this.device.name}) ->`, value);
     if(value) {
       this.device.light.power.value = 'on';
-      this.service.updateCharacteristic(this.platform.Characteristic.On, true);
+      // do i need this?
+      //this.service.updateCharacteristic(this.platform.Characteristic.On, true);
     } else {
       this.device.light.power.value = 'off';
-      this.service.updateCharacteristic(this.platform.Characteristic.On, false);
+      //this.service.updateCharacteristic(this.platform.Characteristic.On, false);
     }
     callback(null);
   }
@@ -83,7 +84,7 @@ export class HaikuPlatformAccessory {
     this.device.light.power.refresh();
     this.device.light.power.listen()
       .on('change', power => {
-        this.platform.log.debug(`Current power: ${power}`);
+        this.platform.log.debug(`Current power (${this.device.name}): ${power}`);
         if(power === 'ON') {
           currentOn = true;
         }
@@ -98,11 +99,11 @@ export class HaikuPlatformAccessory {
    * SET Brightness
    */
   setBrightness(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    this.platform.log.debug(`Set Characteristic Brightness (${this.device.name}) ->`, value);
     this.platform.log.debug('maximum from API', this.device.light.brightness.maximum.value);
     const maxVal = this.device.light.brightness.maximum.value || 16;
     const apiValue = value as number/100*maxVal;
-    this.platform.log.debug('Set Characteristic Brightness (apiValue) -> ', apiValue);
+    this.platform.log.debug(`Set Characteristic Brightness (apiValue) (${this.device.name}) ->`, apiValue);
     this.device.light.brightness.value = apiValue;
 
     callback(null);
@@ -120,7 +121,7 @@ export class HaikuPlatformAccessory {
     this.device.light.brightness.listen()
       .on('change', brightness => {
         currentBrightness = brightness/maxVal*100;
-        this.platform.log.debug(`API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
+        this.platform.log.debug(`(${this.device.name}) API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
       });
 
     callback(null, currentBrightness);
@@ -130,12 +131,12 @@ export class HaikuPlatformAccessory {
    * SET ColorTemperature
    */
   setColorTemperature(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.debug('Set Characteristic ColorTemperature -> ', value);
+    this.platform.log.debug(`Set Characteristic ColorTemperature (${this.device.name}) -> `, value);
     const tempValue = value as number;
     //this.platform.log.debug('maximum from API', this.device.light.temperature.maximum.value);
     //const maxVal = this.device.light.temperature.maximum.value || 5000;
     const apiValue = 1000000/tempValue;
-    this.platform.log.debug('Set Characteristic ColorTemperature (apiValue) -> ', apiValue);
+    this.platform.log.debug(`Set Characteristic ColorTemperature (${this.device.name}) (apiValue) -> `, apiValue);
     this.device.light.temperature.value = apiValue;
 
     callback(null);
@@ -150,7 +151,7 @@ export class HaikuPlatformAccessory {
     this.device.light.temperature.listen()
       .on('change', temperature => {
         currentTemperature = 1000000/temperature;
-        this.platform.log.debug(`API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
+        this.platform.log.debug(`(${this.device.name}) API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
       });
 
     callback(null, currentTemperature);

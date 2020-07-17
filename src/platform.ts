@@ -51,57 +51,22 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {    
-    // TODO - change this out to SenseME discovery call
-    /* const device = {
-      name: 'Master Bedroom Light',
-      type: 'HAIKU,LIGHT',
-      id: '20:F8:5E:E2:4C:98',
-      ip: '10.0.1.25',
-    };
-
-    const uuid = this.api.hap.uuid.generate(device.id as string);
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-
-    if (existingAccessory) {
-      // the accessory already exists
-      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-
-      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-      this.log.debug(`accessory info - name: ${existingAccessory.displayName} uuid: ${existingAccessory.UUID}`);
-      existingAccessory.context.device = device;
-      try {
-        this.api.updatePlatformAccessories([existingAccessory]);
-      } catch (e) {
-        this.log.debug(e);
-      }
-
-      // create the accessory handler for the restored accessory
-      // this is imported from `platformAccessory.ts`
-      new HaikuPlatformAccessory(this, existingAccessory);
-
-    } else {
-      const accessory = new this.api.platformAccessory(device.name, uuid, this.api.hap.Categories.LIGHTBULB);
-      this.log.debug(`accessory info - name: ${accessory.displayName} uuid: ${accessory.UUID}`);
-      accessory.context.device = device;
-      new HaikuPlatformAccessory(this, accessory);
-      try {
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      } catch (e) {
-        this.log.debug(e); 
-      }
-    }*/
-
     SenseME.setConfig({ broadcastAddress: undefined })
       .on('founddevice', (device: Device) => {
+
+        // populate deviceInfo 
         const deviceInfo = {
           name: device.name,
           type: device.type,
           id: device.id,
           ip: device.ip,
         };
-        this.log.info(`Found a device: ${device.name} (${device.id})`);
-        const uuid = this.api.hap.uuid.generate(device.id);
-        this.log.info(`assign uuid ${uuid} to ${device.name}`);
+
+        this.log.info('Found a device:', deviceInfo);
+        // generate unique UUID
+        const uuid = this.api.hap.uuid.generate(deviceInfo.id);
+        this.log.info(`assign uuid ${uuid} to ${deviceInfo.name}`);
+        // check if we already know about this accessory
         const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
         if (existingAccessory) {
@@ -110,8 +75,8 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
           this.api.updatePlatformAccessories([existingAccessory]);
           new HaikuPlatformAccessory(this, existingAccessory);
         } else {
-          this.log.info('Adding new accessory:', device.name);
-          const accessory = new this.api.platformAccessory(device.name, uuid);
+          this.log.info('Adding new accessory:', deviceInfo.name);
+          const accessory = new this.api.platformAccessory(deviceInfo.name, uuid);
           accessory.context.device = deviceInfo;
           this.log.debug(`name: ${accessory.displayName} uuid: ${accessory.UUID}`);
           new HaikuPlatformAccessory(this, accessory);
@@ -129,9 +94,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
       SenseME.getAllDevices().forEach(dev => dev.disconnect());
     }, 30000);
     
-
     // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-
   }
 }
