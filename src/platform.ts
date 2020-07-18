@@ -78,6 +78,8 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
             new HaikuPlatformLightAccessory(this, existingAccessory);
           } else if (deviceInfo.type === 'FAN,HAIKU') {
             new HaikuPlatformFanAccessory(this, existingAccessory);
+          } else {
+            this.log.error(`not sure what to do with this device type: ${deviceInfo.type}`);
           }
         } else {
           this.log.info('Adding new accessory:', deviceInfo.name);
@@ -88,6 +90,8 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
             new HaikuPlatformLightAccessory(this, accessory);
           } else if (deviceInfo.type === 'FAN,HAIKU') {
             new HaikuPlatformFanAccessory(this, accessory);
+          } else {
+            this.log.error(`not sure what to do with this device type: ${deviceInfo.type}`);
           }
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         }
