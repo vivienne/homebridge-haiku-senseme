@@ -3,7 +3,7 @@ import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallb
 import { HomebridgeHaikuPlatform } from './platform';
 import { Device } from '@nightbird/haiku-senseme';
 
-export class HaikuPlatformAccessory {
+export class HaikuPlatformLightAccessory {    
   private service: Service;
   private device: Device;
 
@@ -25,7 +25,14 @@ export class HaikuPlatformAccessory {
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Big Ass Fans')
       .setCharacteristic(this.platform.Characteristic.Model, this.accessory.context.device.type)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
-    //.setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'Default-FW')
+
+    // get firmware information
+    this.device.device.firmware.listen()
+      .on('change', fw => {
+        this.platform.log.debug(`got updated firmware (${this.device.name}): ${fw}`);
+        this.accessory.getService(this.platform.Service.AccessoryInformation)!
+          .setCharacteristic(this.platform.Characteristic.FirmwareRevision, fw);
+      });
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
@@ -58,6 +65,7 @@ export class HaikuPlatformAccessory {
       .on('set', this.setColorTemperature.bind(this))
       .on('get', this.getColorTemperature.bind(this))
       .setProps({minValue: 200, maxValue: 454});
+      
   }
 
   /**

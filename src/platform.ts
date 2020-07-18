@@ -1,7 +1,8 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { HaikuPlatformAccessory } from './platformAccessory';
+import { HaikuPlatformLightAccessory } from './lightAccessory';
+import { HaikuPlatformFanAccessory } from './fanAccessory';
 import { Device, SenseME } from '@nightbird/haiku-senseme';
 
 /**
@@ -73,13 +74,21 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
           this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
           existingAccessory.context.device = deviceInfo;
           this.api.updatePlatformAccessories([existingAccessory]);
-          new HaikuPlatformAccessory(this, existingAccessory);
+          if (deviceInfo.type === 'LIGHT,HAIKU') {
+            new HaikuPlatformLightAccessory(this, existingAccessory);
+          } else if (deviceInfo.type === 'FAN,HAIKU') {
+            new HaikuPlatformFanAccessory(this, existingAccessory);
+          }
         } else {
           this.log.info('Adding new accessory:', deviceInfo.name);
           const accessory = new this.api.platformAccessory(deviceInfo.name, uuid);
           accessory.context.device = deviceInfo;
           this.log.debug(`name: ${accessory.displayName} uuid: ${accessory.UUID}`);
-          new HaikuPlatformAccessory(this, accessory);
+          if (deviceInfo.type === 'LIGHT,HAIKU') {
+            new HaikuPlatformLightAccessory(this, accessory);
+          } else if (deviceInfo.type === 'FAN,HAIKU') {
+            new HaikuPlatformFanAccessory(this, accessory);
+          }
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         }
       })
@@ -88,11 +97,11 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
       })
       .discover();
 
-    // run discovery for 30 seconds
+    // run discovery for 10 seconds
     setTimeout(() => {
       SenseME.cancelDiscovery();
       SenseME.getAllDevices().forEach(dev => dev.disconnect());
-    }, 30000);
+    }, 10000);
     
     // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
