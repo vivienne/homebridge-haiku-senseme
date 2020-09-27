@@ -13,7 +13,8 @@ import { Device, SenseME } from '@nightbird/haiku-senseme';
 export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
-  // this is used to track restored cached accessories
+
+  // This is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
 
   constructor(
@@ -41,8 +42,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info(`Loading accessory from cache: ${accessory.UUID} ${accessory.displayName}`);
 
-    // add the restored accessory to the accessories cache so we can track if it has already been registered
-    //this.accessories.push(accessory);
+    // Add the restored accessory to the accessories cache so we can track if it has already been registered.
     this.accessories.push(accessory);
   }
 
@@ -51,7 +51,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {    
+  discoverDevices() {
     SenseME.setConfig({ broadcastAddress: undefined })
       .on('founddevice', (device: Device) => {
 
@@ -63,37 +63,61 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
           ip: device.ip,
         };
 
-        this.log.info('Found a device:', deviceInfo);
+        this.log.info(`Found a device: ${device.name} / ${device.type} / ${device.ip} / ${device.id}`);
+
         // generate unique UUID
         const uuid = this.api.hap.uuid.generate(deviceInfo.id);
-        this.log.info(`assign uuid ${uuid} to ${deviceInfo.name}`);
+
+        this.log.debug(`Assigning UUID ${uuid} to ${deviceInfo.name}`);
+
         // check if we already know about this accessory
         const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
         if (existingAccessory) {
-          this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+          this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
+
           existingAccessory.context.device = deviceInfo;
+
           this.api.updatePlatformAccessories([existingAccessory]);
+
           if (deviceInfo.type === 'LIGHT,HAIKU') {
             new HaikuPlatformLightAccessory(this, existingAccessory);
-          } else if (deviceInfo.type === 'FAN,HAIKU') {
+
+          } else if (deviceInfo.type === 'FAN,HAIKU' || deviceInfo.type === 'FAN,HAIKU,SENSEME') {
             new HaikuPlatformFanAccessory(this, existingAccessory);
+
           } else {
-            this.log.error(`not sure what to do with this device type: ${deviceInfo.type}`);
+            this.log.error(`Not sure what to do with this device type: ${deviceInfo.type}`);
           }
+
         } else {
-          this.log.info('Adding new accessory:', deviceInfo.name);
-          const accessory = new this.api.platformAccessory(deviceInfo.name, uuid);
-          accessory.context.device = deviceInfo;
-          this.log.debug(`name: ${accessory.displayName} uuid: ${accessory.UUID}`);
-          if (deviceInfo.type === 'LIGHT,HAIKU') {
-            new HaikuPlatformLightAccessory(this, accessory);
-          } else if (deviceInfo.type === 'FAN,HAIKU') {
-            new HaikuPlatformFanAccessory(this, accessory);
+
+          // Only add accessories we know how to control to the device cache.
+          if (deviceInfo.type === 'LIGHT,HAIKU' || deviceInfo.type === 'FAN,HAIKU' || deviceInfo.type === 'FAN,HAIKU,SENSEME') {
+
+            this.log.info('Adding new accessory:', deviceInfo.name);
+
+            const accessory = new this.api.platformAccessory(deviceInfo.name, uuid);
+
+            accessory.context.device = deviceInfo;
+
+            this.log.debug(`name: ${accessory.displayName} uuid: ${accessory.UUID}`);
+
+            if (deviceInfo.type === 'LIGHT,HAIKU') {
+              new HaikuPlatformLightAccessory(this, accessory);
+
+            } else if (deviceInfo.type === 'FAN,HAIKU' || deviceInfo.type === 'FAN,HAIKU,SENSEME') {
+              new HaikuPlatformFanAccessory(this, accessory);
+            }
+
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+
+          } else if (deviceInfo.type === 'SWITCH,SENSEME') {
+            this.log.warn(`Wall control switches are not supported yet: ${deviceInfo.name} (${deviceInfo.type})`);
+
           } else {
-            this.log.error(`not sure what to do with this device type: ${deviceInfo.type}`);
+            this.log.error(`Not sure what to do with this device type: ${deviceInfo.name} (${deviceInfo.type})`);
           }
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         }
       })
       .on('lostdevice', (device: Device) => {
@@ -106,7 +130,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
       SenseME.cancelDiscovery();
       SenseME.getAllDevices().forEach(dev => dev.disconnect());
     }, 10000);
-    
+
     // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
   }
