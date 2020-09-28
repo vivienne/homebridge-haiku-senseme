@@ -52,10 +52,10 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
-    SenseME.setConfig({ broadcastAddress: undefined })
+    SenseME.setConfig({ broadcastAddress: this.config.broadcastAddress || undefined })
       .on('founddevice', (device: Device) => {
 
-        // populate deviceInfo 
+        // populate deviceInfo
         const deviceInfo = {
           name: device.name,
           type: device.type,
