@@ -1,6 +1,6 @@
 # Homebridge Haiku by Big Ass Fans Plugin
 
-A homebridge plugin for Haiku by BAF devices. Tested on Haiku Light only. 
+A homebridge plugin for Haiku by BAF devices.
 
 Uses this modified version of the [haiku-senseme](https://github.com/vivienne/haiku-senseme) API.
 
@@ -9,7 +9,7 @@ Uses this modified version of the [haiku-senseme](https://github.com/vivienne/ha
 Install through homebridge-config-ui-x or manually:
 
 ```
-sudo npm install -g homebridge-haiku-senseme 
+sudo npm install -g homebridge-haiku-senseme
 ```
 Example config.json below:
 ```
@@ -23,6 +23,12 @@ Example config.json below:
 
 ## Notes
 
-* Tested on Haiku light only
 * On startup, platform will run discovery for 10 seconds
-* Skeleton accessory added for fans but is wholly untested. Ideally services would be added depending on their existence, but that level of JS is beyond me. PRs welcome. 
+* Ideally services would be added depending on their existence. PRs welcome.
+
+## TODO
+
+* Use Fanv2.SwingMode for Haiku's "Whoosh"?
+* Add support for Fanv2.RotationDirection.
+* Create an OccupancySensor accessory.
+* Allow setting the number of expected devices during discovery, as UDP broadcast is unreliable.

@@ -10,6 +10,12 @@
         "type": "string",
         "required": true,
         "default": "Haiku by Big Ass Fans"
+      },
+      "broadcastAddress": {
+        "title": "An optional IPv4 address to communicate with Haiku devices.",
+        "type": "string",
+        "required": false,
+        "format": "ipv4"
       }
     }
   }

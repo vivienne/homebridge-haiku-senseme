@@ -3,7 +3,7 @@ import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallb
 import { HomebridgeHaikuPlatform } from './platform';
 import { Device } from '@nightbird/haiku-senseme';
 
-export class HaikuPlatformLightAccessory {    
+export class HaikuPlatformLightAccessory {
   private service: Service;
   private device: Device;
 
@@ -12,10 +12,11 @@ export class HaikuPlatformLightAccessory {
     private readonly accessory: PlatformAccessory,
   ) {
     this.device = new Device({
-      name: this.accessory.context.device.name, 
-      id: this.accessory.context.device.id, 
-      type: this.accessory.context.device.type, 
-      ip: this.accessory.context.device.ip});
+      name: this.accessory.context.device.name,
+      id: this.accessory.context.device.id,
+      type: this.accessory.context.device.type,
+      ip: this.accessory.context.device.ip,
+    });
 
     // how to make sure this completes?
     this.device.refreshAll();
@@ -24,7 +25,7 @@ export class HaikuPlatformLightAccessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Big Ass Fans')
       .setCharacteristic(this.platform.Characteristic.Model, this.accessory.context.device.type)
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.accessory.context.device.id);
 
     // get firmware information
     this.device.device.firmware.listen()
@@ -36,8 +37,8 @@ export class HaikuPlatformLightAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || 
-    this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name);
+    this.service = this.accessory.getService(this.platform.Service.Lightbulb) ||
+      this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name);
 
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
@@ -58,14 +59,14 @@ export class HaikuPlatformLightAccessory {
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
       .on('set', this.setBrightness.bind(this))
-      .on('get', this.getBrightness.bind(this));       
+      .on('get', this.getBrightness.bind(this));
 
     // ColorTemperature - min/max hardcoded because of refresh time
     this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature)
       .on('set', this.setColorTemperature.bind(this))
       .on('get', this.getColorTemperature.bind(this))
-      .setProps({minValue: 200, maxValue: 454});
-      
+      .setProps({ minValue: 200, maxValue: 454 });
+
   }
 
   /**
@@ -73,7 +74,7 @@ export class HaikuPlatformLightAccessory {
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug(`Set Characteristic On (${this.device.name}) ->`, value);
-    if(value) {
+    if (value) {
       this.device.light.power.value = 'on';
       // do i need this?
       //this.service.updateCharacteristic(this.platform.Characteristic.On, true);
@@ -93,10 +94,10 @@ export class HaikuPlatformLightAccessory {
     this.device.light.power.listen()
       .on('change', power => {
         this.platform.log.debug(`Current power (${this.device.name}): ${power}`);
-        if(power === 'ON') {
+        if (power === 'ON') {
           currentOn = true;
         }
-        if(power === 'OFF') {
+        if (power === 'OFF') {
           currentOn = false;
         }
       });
@@ -110,13 +111,13 @@ export class HaikuPlatformLightAccessory {
     this.platform.log.debug(`Set Characteristic Brightness (${this.device.name}) ->`, value);
     this.platform.log.debug('maximum from API', this.device.light.brightness.maximum.value);
     const maxVal = this.device.light.brightness.maximum.value || 16;
-    const apiValue = value as number/100*maxVal;
+    const apiValue = value as number / 100 * maxVal;
     this.platform.log.debug(`Set Characteristic Brightness (apiValue) (${this.device.name}) ->`, apiValue);
     this.device.light.brightness.value = apiValue;
 
     callback(null);
   }
-  
+
   /**
    * GET Brightness
    */
@@ -128,7 +129,7 @@ export class HaikuPlatformLightAccessory {
     this.device.light.brightness.refresh();
     this.device.light.brightness.listen()
       .on('change', brightness => {
-        currentBrightness = brightness/maxVal*100;
+        currentBrightness = brightness / maxVal * 100;
         this.platform.log.debug(`(${this.device.name}) API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
       });
 
@@ -143,13 +144,13 @@ export class HaikuPlatformLightAccessory {
     const tempValue = value as number;
     //this.platform.log.debug('maximum from API', this.device.light.temperature.maximum.value);
     //const maxVal = this.device.light.temperature.maximum.value || 5000;
-    const apiValue = 1000000/tempValue;
+    const apiValue = 1000000 / tempValue;
     this.platform.log.debug(`Set Characteristic ColorTemperature (${this.device.name}) (apiValue) -> `, apiValue);
     this.device.light.temperature.value = apiValue;
 
     callback(null);
   }
-  
+
   /**
    * GET ColorTemperature
    */
@@ -158,7 +159,7 @@ export class HaikuPlatformLightAccessory {
     this.device.light.temperature.refresh();
     this.device.light.temperature.listen()
       .on('change', temperature => {
-        currentTemperature = 1000000/temperature;
+        currentTemperature = 1000000 / temperature;
         this.platform.log.debug(`(${this.device.name}) API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
       });
 
