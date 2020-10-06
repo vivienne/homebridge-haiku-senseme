@@ -23,7 +23,7 @@ Example config.json below:
 
 ## Notes
 
-* On startup, platform will run discovery for 10 seconds
+* On startup, platform will run discovery for 30 seconds
 * Ideally services would be added depending on their existence. PRs welcome.
 
 ## TODO
