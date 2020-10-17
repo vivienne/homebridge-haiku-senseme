@@ -63,6 +63,24 @@ export class HaikuPlatformFanAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.RotationSpeed)
       .on('set', this.setRotationSpeed.bind(this))
       .on('get', this.getRotationSpeed.bind(this));
+
+    this.device.fan.power.listen()
+      .on('change', power => {
+        this.platform.log.debug(`Got updated power value (${this.device.name}): ${power}`);
+        if (power === 'ON') {
+          this.service.updateCharacteristic(this.platform.Characteristic.Active, true);
+        }
+        if (power === 'OFF') {
+          this.service.updateCharacteristic(this.platform.Characteristic.Active, false);
+        }
+      });
+
+    this.device.fan.speed.listen()
+      .on('change', speed => {
+        this.platform.log.debug(`Got updated fan speed (${this.device.name}): ${speed})`);
+        this.service.updateCharacteristic(this.platform.Characteristic.RotationSpeed, Math.round(speed * 100 / this.maxSpeed));
+      });
+
   }
 
   // SET Active
@@ -78,9 +96,15 @@ export class HaikuPlatformFanAccessory {
 
   // GET Fan Active Characteristic
   getActive(callback: CharacteristicGetCallback) {
-    const currentState = this.service.getCharacteristic(this.platform.Characteristic.Active).value as boolean;
-
-    this.service.updateCharacteristic(this.platform.Characteristic.Active, currentState);
+    let currentState = this.service.getCharacteristic(this.platform.Characteristic.Active).value as boolean;
+    const power = this.device.fan.power.value;
+    this.platform.log.debug(`Current power (${this.device.name}): ${power}`);
+    if (power === 'on') {
+      currentState = true;
+    }
+    if (power === 'off') {
+      currentState = false;
+    }
 
     callback(null, currentState);
   }
@@ -104,16 +128,10 @@ export class HaikuPlatformFanAccessory {
   // Get the current rotation speed, converting from the BAF 0-100 value to Homekit's 0-7
   getRotationSpeed(callback: CharacteristicGetCallback) {
     let currentSpeed = this.service.getCharacteristic(this.platform.Characteristic.RotationSpeed).value as number;
+    const speed = this.device.fan.speed.value;
 
-    this.device.fan.speed.refresh();
-    this.device.fan.speed.listen()
-      .on('change', speed => {
-        currentSpeed = Math.round(speed * 100 / this.maxSpeed);
-
-        this.platform.log.debug(`(${this.device.name}) API speed ${speed} Homekit speed (${currentSpeed})`);
-      });
-
-    this.service.updateCharacteristic(this.platform.Characteristic.RotationSpeed, currentSpeed);
+    currentSpeed = Math.round(speed * 100 / this.maxSpeed);
+    this.platform.log.debug(`(${this.device.name}) API speed ${speed} Homekit speed (${currentSpeed})`);
 
     callback(null, currentSpeed);
   }
