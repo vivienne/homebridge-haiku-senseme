@@ -18,14 +18,15 @@ Example config.json below:
     "platforms": [
         {
             "name": "Haiku by Big Ass Fans",
-            "platform": "haiku"
+            "platform": "haiku",
+            "discoveryInterval": 30
         }
     ]
 ```
 
 ## Notes
 
-* On startup, platform will run discovery for 30 seconds
+* On startup, platform will run discovery for the amount of time specified in the config (from 10-600 seconds, defaults to 30)
 * Ideally services would be added depending on their existence. PRs welcome.
 
 ## TODO
