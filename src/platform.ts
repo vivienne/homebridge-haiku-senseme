@@ -125,11 +125,11 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
       })
       .discover();
 
-    // run discovery for 30 seconds
+    // run discovery for discoveryInterval seconds
     setTimeout(() => {
       SenseME.cancelDiscovery();
       SenseME.getAllDevices().forEach(dev => dev.disconnect());
-    }, 30000);
+    }, this.config.discoveryInterval * 1000);
 
     // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

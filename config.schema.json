@@ -16,6 +16,14 @@
         "type": "string",
         "required": false,
         "format": "ipv4"
+      },
+      "discoveryInterval": {
+        "type": "integer",
+        "title": "Discovery Interval",
+        "description": "An interval (in seconds) in which UDP broadcasts are sent.",
+        "default": 30,
+        "minimum": 10,
+        "maximum": 600
       }
     }
   }

@@ -67,6 +67,23 @@ export class HaikuPlatformLightAccessory {
       .on('get', this.getColorTemperature.bind(this))
       .setProps({ minValue: 200, maxValue: 454 });
 
+    // listen for changes to properties we care about
+    this.device.light.power.listen()
+      .on('change', power => {
+        this.platform.log.debug(`Got updated power value (${this.device.name}): ${power}`);
+        if (power === 'ON') {
+          this.service.updateCharacteristic(this.platform.Characteristic.On, true);
+        }
+        if (power === 'OFF') {
+          this.service.updateCharacteristic(this.platform.Characteristic.On, false);
+        }
+      });
+
+    this.device.light.brightness.listen()
+      .on('change', brightness => {
+        this.service.updateCharacteristic(this.platform.Characteristic.Brightness, brightness / 16 * 100);
+        this.platform.log.debug(`Got updated brightness (${this.device.name}): ${brightness}`); 
+      });
   }
 
   /**
@@ -76,11 +93,8 @@ export class HaikuPlatformLightAccessory {
     this.platform.log.debug(`Set Characteristic On (${this.device.name}) ->`, value);
     if (value) {
       this.device.light.power.value = 'on';
-      // do i need this?
-      //this.service.updateCharacteristic(this.platform.Characteristic.On, true);
     } else {
       this.device.light.power.value = 'off';
-      //this.service.updateCharacteristic(this.platform.Characteristic.On, false);
     }
     callback(null);
   }
@@ -90,17 +104,14 @@ export class HaikuPlatformLightAccessory {
    */
   getOn(callback: CharacteristicGetCallback) {
     let currentOn = this.service.getCharacteristic(this.platform.Characteristic.On).value as boolean;
-    this.device.light.power.refresh();
-    this.device.light.power.listen()
-      .on('change', power => {
-        this.platform.log.debug(`Current power (${this.device.name}): ${power}`);
-        if (power === 'ON') {
-          currentOn = true;
-        }
-        if (power === 'OFF') {
-          currentOn = false;
-        }
-      });
+    const power = this.device.light.power.value;
+    this.platform.log.debug(`Current power (${this.device.name}): ${power}`);
+    if (power === 'on') {
+      currentOn = true;
+    }
+    if (power === 'off') {
+      currentOn = false;
+    }
     callback(null, currentOn);
   }
 
@@ -126,12 +137,10 @@ export class HaikuPlatformLightAccessory {
     // hardcoded for now, how to make sure that the values are refreshed?
     const maxVal = 16;
     let currentBrightness = this.service.getCharacteristic(this.platform.Characteristic.Brightness).value as number;
-    this.device.light.brightness.refresh();
-    this.device.light.brightness.listen()
-      .on('change', brightness => {
-        currentBrightness = brightness / maxVal * 100;
-        this.platform.log.debug(`(${this.device.name}) API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
-      });
+    const brightness = this.device.light.brightness.value;
+    
+    currentBrightness = brightness / maxVal * 100;
+    this.platform.log.debug(`(${this.device.name}) API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
 
     callback(null, currentBrightness);
   }
