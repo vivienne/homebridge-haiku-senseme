@@ -27,15 +27,15 @@
     "homebridge-plugin"
   ],
   "dependencies": {
-    "@nightbird/haiku-senseme": "^3.1.1"
+    "@nightbird/haiku-senseme": "^3.1.2"
   },
   "devDependencies": {
-    "@types/node": "^14.11.10",
-    "@typescript-eslint/eslint-plugin": "^4.4.1",
-    "@typescript-eslint/parser": "^4.4.1",
+    "@types/node": "^14.14.0",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
+    "@typescript-eslint/parser": "^4.5.0",
     "eslint": "^7.11.0",
     "homebridge": "^1.1.6",
-    "nodemon": "^2.0.5",
+    "nodemon": "^2.0.6",
     "rimraf": "^3.0.2",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.3"
