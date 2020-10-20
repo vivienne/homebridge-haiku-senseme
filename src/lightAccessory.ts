@@ -84,6 +84,12 @@ export class HaikuPlatformLightAccessory {
         this.service.updateCharacteristic(this.platform.Characteristic.Brightness, brightness / 16 * 100);
         this.platform.log.debug(`Got updated brightness (${this.device.name}): ${brightness}`); 
       });
+
+    this.device.light.temperature.listen()
+      .on('change', temperature => {
+        this.service.updateCharacteristic(this.platform.Characteristic.ColorTemperature, 1000000 / temperature);
+        this.platform.log.debug(`Got updated color temp (${this.device.name}): ${temperature}`);
+      });
   }
 
   /**
@@ -165,12 +171,10 @@ export class HaikuPlatformLightAccessory {
    */
   getColorTemperature(callback: CharacteristicGetCallback) {
     let currentTemperature = this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature).value as number;
-    this.device.light.temperature.refresh();
-    this.device.light.temperature.listen()
-      .on('change', temperature => {
-        currentTemperature = 1000000 / temperature;
-        this.platform.log.debug(`(${this.device.name}) API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
-      });
+    const temperature = this.device.light.temperature.value;
+
+    currentTemperature = 1000000 / temperature;
+    this.platform.log.debug(`(${this.device.name}) API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
 
     callback(null, currentTemperature);
   }
