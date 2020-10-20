@@ -83,7 +83,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
           if (deviceInfo.type === 'LIGHT,HAIKU') {
             new HaikuPlatformLightAccessory(this, existingAccessory);
 
-          } else if (deviceInfo.type.startsWith('FAN,HAIKU')) {
+          } else if (deviceInfo.type.startsWith('FAN')) {
             new HaikuPlatformFanAccessory(this, existingAccessory);
 
           } else {
@@ -93,7 +93,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
         } else {
 
           // Only add accessories we know how to control to the device cache.
-          if (deviceInfo.type === 'LIGHT,HAIKU' || deviceInfo.type.startsWith('FAN,HAIKU')) {
+          if (deviceInfo.type === 'LIGHT,HAIKU' || deviceInfo.type.startsWith('FAN')) {
 
             this.log.info('Adding new accessory:', deviceInfo.name);
 
@@ -106,7 +106,7 @@ export class HomebridgeHaikuPlatform implements DynamicPlatformPlugin {
             if (deviceInfo.type === 'LIGHT,HAIKU') {
               new HaikuPlatformLightAccessory(this, accessory);
 
-            } else if (deviceInfo.type.startsWith('FAN,HAIKU')) {
+            } else if (deviceInfo.type.startsWith('FAN')) {
               new HaikuPlatformFanAccessory(this, accessory);
             }
 
