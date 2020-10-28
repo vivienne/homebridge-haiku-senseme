@@ -50,7 +50,7 @@ export class HaikuPlatformFanAccessory {
         this.platform.log.debug(`Got updated hasLight (${this.device.name}): ${has_light}`);
         if (has_light) {
           this.lightService = this.accessory.getService(this.platform.Service.Lightbulb) ||
-          this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name);
+          this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name + ' Light');
 
           this.lightService.setCharacteristic(this.platform.Characteristic.Name, this.accessory.context.device.name);
 
@@ -63,12 +63,6 @@ export class HaikuPlatformFanAccessory {
           this.lightService.getCharacteristic(this.platform.Characteristic.Brightness)
             .on('set', this.setBrightness.bind(this))
             .on('get', this.getBrightness.bind(this));
-
-          // ColorTemperature - min/max hardcoded because of refresh time
-          this.lightService.getCharacteristic(this.platform.Characteristic.ColorTemperature)
-            .on('set', this.setColorTemperature.bind(this))
-            .on('get', this.getColorTemperature.bind(this))
-            .setProps({ minValue: 200, maxValue: 454 });
 
           // listen for changes to properties we care about
           this.device.light.power.listen()
@@ -88,12 +82,6 @@ export class HaikuPlatformFanAccessory {
               this.platform.log.debug(`Got updated brightness (${this.device.name}): ${brightness}`); 
             });
 
-          this.device.light.temperature.listen()
-            .on('change', temperature => {
-              this.lightService.updateCharacteristic(this.platform.Characteristic.ColorTemperature, 1000000 / temperature);
-              this.platform.log.debug(`Got updated color temp (${this.device.name}): ${temperature}`);
-            });
-            
         }
       });
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
@@ -246,34 +234,6 @@ export class HaikuPlatformFanAccessory {
     this.platform.log.debug(`(${this.device.name}) API brightness: ${brightness} Homekit brightness: ${currentBrightness}`);
 
     callback(null, currentBrightness);
-  }
-
-  /**
-   * SET ColorTemperature
-   */
-  setColorTemperature(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.debug(`Set Characteristic ColorTemperature (${this.device.name}) -> `, value);
-    const tempValue = value as number;
-    //this.platform.log.debug('maximum from API', this.device.light.temperature.maximum.value);
-    //const maxVal = this.device.light.temperature.maximum.value || 5000;
-    const apiValue = 1000000 / tempValue;
-    this.platform.log.debug(`Set Characteristic ColorTemperature (${this.device.name}) (apiValue) -> `, apiValue);
-    this.device.light.temperature.value = apiValue;
-
-    callback(null);
-  }
-
-  /**
-   * GET ColorTemperature
-   */
-  getColorTemperature(callback: CharacteristicGetCallback) {
-    let currentTemperature = this.lightService.getCharacteristic(this.platform.Characteristic.ColorTemperature).value as number;
-    const temperature = this.device.light.temperature.value;
-
-    currentTemperature = 1000000 / temperature;
-    this.platform.log.debug(`(${this.device.name}) API colortemp: ${temperature} Homekit colortemp: ${currentTemperature}`);
-
-    callback(null, currentTemperature);
   }
 
 }
