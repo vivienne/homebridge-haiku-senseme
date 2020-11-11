@@ -45,45 +45,46 @@ export class HaikuPlatformFanAccessory {
     this.service = this.accessory.getService(this.platform.Service.Fanv2) ||
       this.accessory.addService(this.platform.Service.Fanv2, this.accessory.context.device.name);
 
-    this.device.device.hasLight.listen()
-      .on('change', has_light => {
-        this.platform.log.debug(`Got updated hasLight (${this.device.name}): ${has_light}`);
-        if (has_light) {
-          this.lightService = this.accessory.getService(this.platform.Service.Lightbulb) ||
+    //this.device.device.hasLight.listen()
+    //.on('change', has_light => {
+    //this.platform.log.debug(`Got updated hasLight (${this.device.name}): ${has_light}`);
+    //if (has_light) {
+    if (true) {
+      this.lightService = this.accessory.getService(this.platform.Service.Lightbulb) ||
           this.accessory.addService(this.platform.Service.Lightbulb, this.accessory.context.device.name + ' Light');
 
-          this.lightService.setCharacteristic(this.platform.Characteristic.Name, this.accessory.context.device.name);
+      this.lightService.setCharacteristic(this.platform.Characteristic.Name, this.accessory.context.device.name);
 
-          // register handlers for the On/Off Characteristic
-          this.lightService.getCharacteristic(this.platform.Characteristic.On)
-            .on('set', this.setOn.bind(this))
-            .on('get', this.getOn.bind(this));
+      // register handlers for the On/Off Characteristic
+      this.lightService.getCharacteristic(this.platform.Characteristic.On)
+        .on('set', this.setOn.bind(this))
+        .on('get', this.getOn.bind(this));
 
-          // register handlers for the Brightness Characteristic
-          this.lightService.getCharacteristic(this.platform.Characteristic.Brightness)
-            .on('set', this.setBrightness.bind(this))
-            .on('get', this.getBrightness.bind(this));
+      // register handlers for the Brightness Characteristic
+      this.lightService.getCharacteristic(this.platform.Characteristic.Brightness)
+        .on('set', this.setBrightness.bind(this))
+        .on('get', this.getBrightness.bind(this));
 
-          // listen for changes to properties we care about
-          this.device.light.power.listen()
-            .on('change', power => {
-              this.platform.log.debug(`Got updated power value (${this.device.name}): ${power}`);
-              if (power === 'ON') {
-                this.lightService.updateCharacteristic(this.platform.Characteristic.On, true);
-              }
-              if (power === 'OFF') {
-                this.lightService.updateCharacteristic(this.platform.Characteristic.On, false);
-              }
-            });
+      // listen for changes to properties we care about
+      this.device.light.power.listen()
+        .on('change', power => {
+          this.platform.log.debug(`Got updated power value (${this.device.name}): ${power}`);
+          if (power === 'ON') {
+            this.lightService.updateCharacteristic(this.platform.Characteristic.On, true);
+          }
+          if (power === 'OFF') {
+            this.lightService.updateCharacteristic(this.platform.Characteristic.On, false);
+          }
+        });
 
-          this.device.light.brightness.listen()
-            .on('change', brightness => {
-              this.lightService.updateCharacteristic(this.platform.Characteristic.Brightness, brightness / 16 * 100);
-              this.platform.log.debug(`Got updated brightness (${this.device.name}): ${brightness}`); 
-            });
+      this.device.light.brightness.listen()
+        .on('change', brightness => {
+          this.lightService.updateCharacteristic(this.platform.Characteristic.Brightness, brightness / 16 * 100);
+          this.platform.log.debug(`Got updated brightness (${this.device.name}): ${brightness}`); 
+        });
 
-        }
-      });
+    }
+    //});
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
     //this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
