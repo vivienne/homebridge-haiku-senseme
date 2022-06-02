@@ -1,6 +1,10 @@
-# Homebridge Haiku by Big Ass Fans Plugin
+# DEPRECATED
 
-A homebridge plugin for Haiku by BAF devices.
+Please try the [homebridge-i6-bigAssFans](https://github.com/oogje/homebridge-i6-bigAssFans) plugin instead which is being actively maintained and is compatbile with the new API.
+
+<s>Homebridge Haiku by Big Ass Fans Plugin
+
+A homebridge plugin for Haiku by BAF devices. This plugin has been made obsolete by the new firmware release from BAF as of April 2022. 
 
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 
