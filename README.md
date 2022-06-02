@@ -7,8 +7,6 @@ Please try the [homebridge-i6-bigAssFans](https://github.com/oogje/homebridge-i6
 
 A homebridge plugin for Haiku by BAF devices. 
 
-[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
-
 Uses this modified version of the [haiku-senseme](https://github.com/vivienne/haiku-senseme) API.
 
 ## Installing
